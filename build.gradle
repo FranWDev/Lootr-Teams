@@ -55,6 +55,9 @@ repositories {
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
+    // Mixin annotation processor for refmap generation
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+
     // Lootr: required dependency
     implementation fg.deobf("curse.maven:lootr-361276:7263076")
 

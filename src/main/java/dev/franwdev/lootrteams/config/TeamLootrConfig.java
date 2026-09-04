@@ -10,11 +10,13 @@ public class TeamLootrConfig {
     public static boolean ENABLE_LEGACY_SYNC = true;
     public static boolean AUTO_MIGRATE       = true;
     public static boolean DEBUG_MODE         = true;
+    public static boolean GLOBAL_SHARED_LOOT = false;
 
     private static final ForgeConfigSpec.BooleanValue CFG_ENABLE_TEAMS;
     private static final ForgeConfigSpec.BooleanValue CFG_ENABLE_LEGACY_SYNC;
     private static final ForgeConfigSpec.BooleanValue CFG_AUTO_MIGRATE;
     private static final ForgeConfigSpec.BooleanValue CFG_DEBUG_MODE;
+    private static final ForgeConfigSpec.BooleanValue CFG_GLOBAL_SHARED_LOOT;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -37,6 +39,10 @@ public class TeamLootrConfig {
             .comment("Enable verbose debug logging.")
             .define("debugMode", false);
 
+        CFG_GLOBAL_SHARED_LOOT = builder
+            .comment("If true, all players share a single global team inventory for all chests (making chests generic/shared).")
+            .define("globalSharedLoot", false);
+
         builder.pop();
         SPEC = builder.build();
     }
@@ -49,6 +55,7 @@ public class TeamLootrConfig {
         ENABLE_TEAMS       = CFG_ENABLE_TEAMS.get();
         ENABLE_LEGACY_SYNC = CFG_ENABLE_LEGACY_SYNC.get();
         AUTO_MIGRATE       = CFG_AUTO_MIGRATE.get();
+        GLOBAL_SHARED_LOOT = CFG_GLOBAL_SHARED_LOOT.get();
         // DEBUG_MODE is controlled by the source code during tests, do not override
     }
 }

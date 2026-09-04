@@ -1,6 +1,7 @@
 package dev.franwdev.lootrteams.unit;
 
 import dev.franwdev.lootrteams.team.TeamIdentifier;
+import dev.franwdev.lootrteams.config.TeamLootrConfig;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -34,5 +35,24 @@ class TeamIdentifierTest {
         UUID player = UUID.randomUUID();
         UUID ghost = TeamIdentifier.toGhostTeamId(player);
         assertNotEquals(player, ghost, "Ghost team UUID should not equal the original player UUID");
+    }
+
+    @Test
+    void globalSharedLootRedirectsAllPlayersToSameGlobalTeam() {
+        TeamLootrConfig.GLOBAL_SHARED_LOOT = true;
+        try {
+            TeamIdentifier identifier = new TeamIdentifier();
+            UUID playerA = UUID.randomUUID();
+            UUID playerB = UUID.randomUUID();
+            
+            UUID idA = identifier.getTeamId(playerA);
+            UUID idB = identifier.getTeamId(playerB);
+            
+            assertEquals(TeamIdentifier.GLOBAL_SHARED_TEAM_ID, idA);
+            assertEquals(TeamIdentifier.GLOBAL_SHARED_TEAM_ID, idB);
+            assertEquals(idA, idB);
+        } finally {
+            TeamLootrConfig.GLOBAL_SHARED_LOOT = false;
+        }
     }
 }

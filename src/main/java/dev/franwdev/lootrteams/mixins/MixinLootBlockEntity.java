@@ -21,7 +21,7 @@ import noobanidus.mods.lootr.block.entities.LootrBarrelBlockEntity;
 }, remap = false)
 public abstract class MixinLootBlockEntity {
 
-    @Inject(method = "getUpdateTag()Lnet/minecraft/nbt/CompoundTag;", at = @At("HEAD"), remap = true)
+    @Inject(method = "getUpdateTag()Lnet/minecraft/nbt/CompoundTag;", at = @At("HEAD"), remap = true, require = 0)
     private void onGetUpdateTag(CallbackInfoReturnable<CompoundTag> cir) {
         LootrTeamsServerUtil.refreshOpeners((ILootBlockEntity) this);
     }
