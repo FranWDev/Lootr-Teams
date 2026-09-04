@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import dev.franwdev.lootrteams.config.TeamLootrConfig;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.fml.ModList;
 import org.apache.logging.log4j.LogManager;
@@ -106,7 +107,7 @@ public class FTBTeamsCompat {
             registerTeamEvent("dev.ftb.mods.ftbteams.api.event.TeamManagerEvent", "LOADED",
                 event -> handleTeamManager(event, storageManager));
 
-            if (dev.franwdev.lootrteams.config.TeamLootrConfig.DEBUG_MODE) {
+            if (TeamLootrConfig.DEBUG_MODE) {
                 LOG.info("[LootrTeams] Registered FTB Teams event handlers.");
             }
         } catch (Throwable e) {
@@ -174,7 +175,7 @@ public class FTBTeamsCompat {
             Object player = event.getClass().getMethod("getPlayer").invoke(event);
             if (team == null || player == null) return;
 
-            UUID teamId = (UUID) team.getClass().getMethod("getId").invoke(team);
+            UUID teamId = (UUID) team.getClass().getMethod("getTeamId").invoke(team);
             UUID playerId = (UUID) player.getClass().getMethod("getUUID").invoke(player);
             storageManager.updatePlayerTeam(playerId, teamId);
         } catch (Throwable e) {
@@ -184,15 +185,7 @@ public class FTBTeamsCompat {
 
     private static void handlePlayerLeft(Object event, TeamStorageManager storageManager) {
         try {
-            UUID playerId = null;
-            try {
-                playerId = (UUID) event.getClass().getMethod("getPlayerId").invoke(event);
-            } catch (NoSuchMethodException e) {
-                Object player = event.getClass().getMethod("getPlayer").invoke(event);
-                if (player != null) {
-                    playerId = (UUID) player.getClass().getMethod("getUUID").invoke(player);
-                }
-            }
+            UUID playerId = (UUID) event.getClass().getMethod("getPlayerId").invoke(event);
             if (playerId == null) return;
             UUID ghostId = TeamIdentifier.toGhostTeamId(playerId);
             storageManager.updatePlayerTeam(playerId, ghostId);
@@ -221,8 +214,9 @@ public class FTBTeamsCompat {
     private static UUID resolveTeamId(Object team, UUID playerId) throws Exception {
         boolean isParty = (boolean) team.getClass().getMethod("isPartyTeam").invoke(team);
         if (isParty) {
-            return (UUID) team.getClass().getMethod("getId").invoke(team);
+            return (UUID) team.getClass().getMethod("getTeamId").invoke(team);
         }
         return TeamIdentifier.toGhostTeamId(playerId);
     }
 }
+
