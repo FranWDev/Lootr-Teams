@@ -1,6 +1,5 @@
 package dev.franwdev.lootrteams.migration;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +18,7 @@ import dev.franwdev.lootrteams.team.FTBTeamsCompat;
 import dev.franwdev.lootrteams.team.TeamIdentifier;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
@@ -95,7 +95,7 @@ public class LegacyMigrator {
                         }
                     })
                     .toList()) {
-                if (migrateFile(path.toFile(), server)) {
+                if (migrateFile(path, server)) {
                     count++;
                 }
             }
@@ -105,16 +105,16 @@ public class LegacyMigrator {
         return count;
     }
 
-    private static boolean migrateFile(File file, MinecraftServer server) {
+    private static boolean migrateFile(Path path, MinecraftServer server) {
         CompoundTag root;
         try {
-            root = NbtIo.readCompressed(file);
+            root = NbtIo.readCompressed(path, NbtAccounter.unlimitedHeap());
         } catch (IOException e) {
             // Fallback to uncompressed just in case
             try {
-                root = NbtIo.read(file);
+                root = NbtIo.read(path);
             } catch (IOException ex) {
-                LOG.warn("[LootrTeams] Could not read {} (compressed or uncompressed)", file.getName());
+                LOG.warn("[LootrTeams] Could not read {} (compressed or uncompressed)", path.getFileName());
                 return false;
             }
         }
@@ -123,15 +123,16 @@ public class LegacyMigrator {
 
         if (modified) {
             try {
-                NbtIo.writeCompressed(root, file);
+                NbtIo.writeCompressed(root, path);
                 return true;
             } catch (IOException e) {
-                LOG.error("[LootrTeams] Could not write migrated file {}", file.getName(), e);
+                LOG.error("[LootrTeams] Could not write migrated file {}", path.getFileName(), e);
             }
         }
 
         return false;
     }
+
 
     /**
      * Extracts NBT manipulation logic for unit testing without a server

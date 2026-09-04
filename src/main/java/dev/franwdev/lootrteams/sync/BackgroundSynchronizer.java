@@ -14,14 +14,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import dev.franwdev.lootrteams.config.TeamLootrConfig;
-import dev.franwdev.lootrteams.mixins.AccessorChestData;
+import dev.franwdev.lootrteams.mixins.AccessorLootrSavedData;
 import dev.franwdev.lootrteams.team.FTBTeamsCompat;
 import dev.franwdev.lootrteams.team.TeamLootrManager;
 import dev.franwdev.lootrteams.team.TeamStorageManager;
 import net.minecraft.server.MinecraftServer;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
-import noobanidus.mods.lootr.data.ChestData;
-import noobanidus.mods.lootr.data.SpecialChestInventory;
+import noobanidus.mods.lootr.common.data.LootrInventory;
+import noobanidus.mods.lootr.common.data.LootrSavedData;
 
 public class BackgroundSynchronizer {
 
@@ -48,7 +48,7 @@ public class BackgroundSynchronizer {
      * Queues a synchronization task so it doesn't block the main thread.
      * If team members are unknown, attempts to resolve them from FTB Teams.
      */
-    public void scheduleSyncToPlayers(ChestData chestData, UUID teamUUID) {
+    public void scheduleSyncToPlayers(LootrSavedData chestData, UUID teamUUID) {
         if (!TeamLootrConfig.ENABLE_TEAMS || !TeamLootrConfig.ENABLE_LEGACY_SYNC) return;
         if (TeamLootrManager.INSTANCE == null) return;
 
@@ -89,18 +89,18 @@ public class BackgroundSynchronizer {
         }
     }
 
-    public void processTaskImmediate(ChestData chestData, UUID teamUUID) {
+    public void processTaskImmediate(LootrSavedData chestData, UUID teamUUID) {
         TeamStorageManager storageManager = TeamLootrManager.INSTANCE != null
             ? TeamLootrManager.INSTANCE.getStorageManager()
             : null;
         Set<UUID> playerUUIDs = storageManager != null ? storageManager.getPlayersInTeam(teamUUID) : Collections.emptySet();
-        
-        SpecialChestInventory teamInventory = chestData.getInventory(teamUUID);
+
+        LootrInventory teamInventory = chestData.getInventory(teamUUID);
         if (teamInventory == null) return;
 
         for (UUID playerId : playerUUIDs) {
             // Synchronize the player entry with the team inventory
-            ((AccessorChestData) chestData).lootrteams$getInventories()
+            ((AccessorLootrSavedData) chestData).lootrteams$getInventories()
                 .put(playerId, teamInventory);
             chestData.setDirty();
             if (storageManager != null) {
@@ -113,7 +113,7 @@ public class BackgroundSynchronizer {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server != null) {
             server.execute(() -> {
-                SpecialChestInventory teamInventory = task.chestData.getInventory(task.teamUUID);
+                LootrInventory teamInventory = task.chestData.getInventory(task.teamUUID);
                 if (teamInventory == null) return;
 
                 TeamStorageManager storageManager = TeamLootrManager.INSTANCE != null
@@ -122,7 +122,7 @@ public class BackgroundSynchronizer {
                 for (UUID playerId : task.playerUUIDs) {
                     // Only synchronize if the player does not have their own entry already
                     if (task.chestData.getInventory(playerId) == null) {
-                        ((AccessorChestData) task.chestData).lootrteams$getInventories()
+                        ((AccessorLootrSavedData) task.chestData).lootrteams$getInventories()
                             .put(playerId, teamInventory);
                         task.chestData.setDirty();
                         if (TeamLootrConfig.DEBUG_MODE) {
@@ -137,5 +137,5 @@ public class BackgroundSynchronizer {
         }
     }
 
-    private record SyncTask(ChestData chestData, UUID teamUUID, Set<UUID> playerUUIDs) {}
+    private record SyncTask(LootrSavedData chestData, UUID teamUUID, Set<UUID> playerUUIDs) {}
 }
