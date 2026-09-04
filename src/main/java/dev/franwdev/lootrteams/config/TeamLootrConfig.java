@@ -1,10 +1,10 @@
 package dev.franwdev.lootrteams.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class TeamLootrConfig {
 
-    public static final ForgeConfigSpec SPEC;
+    public static final ModConfigSpec SPEC;
 
     public static boolean ENABLE_TEAMS       = true;
     public static boolean ENABLE_LEGACY_SYNC = true;
@@ -12,14 +12,14 @@ public class TeamLootrConfig {
     public static boolean DEBUG_MODE         = true;
     public static boolean GLOBAL_SHARED_LOOT = false;
 
-    private static final ForgeConfigSpec.BooleanValue CFG_ENABLE_TEAMS;
-    private static final ForgeConfigSpec.BooleanValue CFG_ENABLE_LEGACY_SYNC;
-    private static final ForgeConfigSpec.BooleanValue CFG_AUTO_MIGRATE;
-    private static final ForgeConfigSpec.BooleanValue CFG_DEBUG_MODE;
-    private static final ForgeConfigSpec.BooleanValue CFG_GLOBAL_SHARED_LOOT;
+    private static final ModConfigSpec.BooleanValue CFG_ENABLE_TEAMS;
+    private static final ModConfigSpec.BooleanValue CFG_ENABLE_LEGACY_SYNC;
+    private static final ModConfigSpec.BooleanValue CFG_AUTO_MIGRATE;
+    private static final ModConfigSpec.BooleanValue CFG_DEBUG_MODE;
+    private static final ModConfigSpec.BooleanValue CFG_GLOBAL_SHARED_LOOT;
 
     static {
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 
         builder.comment("LootrTeams Configuration").push("general");
 
@@ -59,3 +59,4 @@ public class TeamLootrConfig {
         // DEBUG_MODE is controlled by the source code during tests, do not override
     }
 }
+
