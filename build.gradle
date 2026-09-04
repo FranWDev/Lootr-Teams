@@ -1,35 +1,37 @@
 plugins {
-    id 'net.minecraftforge.gradle' version '6.0.+'
-    id 'org.spongepowered.mixin' version '0.7.+'
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.146'
 }
 
-apply plugin: 'java'
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
-minecraft {
-    mappings channel: 'official', version: minecraft_version
+neoForge {
+    version = project.neoforge_version
+
+    parchment {
+        mappingsVersion = '2024.11.17'
+        minecraftVersion = '1.21.1'
+    }
 
     runs {
         server {
-            workingDirectory project.file('run')
-            property 'forge.logging.console.level', 'debug'
-            mods {
-                lootrteams { source sourceSets.main }
-            }
+            server()
+            systemProperty 'neoforge.logging.console.level', 'debug'
+            programArgument '--nogui'
         }
 
         gameTestServer {
-            workingDirectory project.file('run-gametest')
-            property 'forge.logging.console.level', 'debug'
-            property 'forge.enabledGameTestNamespaces', 'lootrteams'
-            property 'lootrteams.testMode', 'true'
-            mods {
-                lootrteams { 
-                    source sourceSets.main 
-                    source sourceSets.test
-                }
-            }
+            type = 'gameTestServer'
+            systemProperty 'neoforge.logging.console.level', 'debug'
+            systemProperty 'neoforge.enabledGameTestNamespaces', 'lootrteams'
+            systemProperty 'lootrteams.testMode', 'true'
+        }
+    }
+
+    mods {
+        lootrteams {
+            sourceSet sourceSets.main
         }
     }
 }
@@ -43,8 +45,8 @@ sourceSets {
 
 repositories {
     mavenCentral()
-    maven { url 'https://maven.minecraftforge.net' }
-    maven { url "https://www.cursemaven.com" }
+    maven { url 'https://maven.neoforged.net/releases' }
+    maven { url 'https://www.cursemaven.com' }
     exclusiveContent {
         forRepository { maven { url 'https://maven.ftb.team/releases' } }
         filter { includeGroupByRegex 'dev\\.ftb\\..*' }
@@ -53,17 +55,12 @@ repositories {
 }
 
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    // Lootr: required dependency (NeoForge 1.21.1)
+    implementation "curse.maven:lootr-361276:8695784"
 
-    // Mixin annotation processor for refmap generation
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-
-    // Lootr: required dependency
-    implementation fg.deobf("curse.maven:lootr-361276:7263076")
-
-    // FTB Teams: optional dependency (compileOnly)
-    compileOnly fg.deobf("curse.maven:ftb-teams-forge-404468:7499810")
-    testCompileOnly fg.deobf("curse.maven:ftb-teams-forge-404468:7499810")
+    // FTB Teams: optional dependency (compileOnly) (NeoForge 1.21.1)
+    compileOnly "curse.maven:ftb-teams-forge-404468:8724782"
+    testCompileOnly "curse.maven:ftb-teams-forge-404468:8724782"
 
     // Testing dependencies
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
@@ -75,23 +72,17 @@ test {
     exclude '**/gametest/**'
 }
 
-processTestResources {
-}
-
 jar {
     manifest {
         attributes([
             'Specification-Title'   : mod_id,
             'Implementation-Title'  : mod_id,
-            'Implementation-Version': version,
+            'Implementation-Version': project.version,
             'MixinConfigs'          : 'lootrteams.mixins.json'
         ])
     }
     exclude 'dev/franwdev/lootrteams/gametest/**'
 }
 
-mixin {
-    add sourceSets.main, 'lootrteams.refmap.json'
-    config 'lootrteams.mixins.json'
-}
 tasks.named('processTestResources', ProcessResources).configure { duplicatesStrategy = DuplicatesStrategy.INCLUDE }
+
