@@ -7,19 +7,19 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import dev.franwdev.lootrteams.LootrTeams;
 import dev.franwdev.lootrteams.config.TeamLootrConfig;
 import dev.franwdev.lootrteams.team.TeamIdentifier;
 import dev.franwdev.lootrteams.team.TeamLootrManager;
 import dev.franwdev.lootrteams.team.TeamStorageManager;
-
-import noobanidus.mods.lootr.data.ChestData;
-import noobanidus.mods.lootr.data.SpecialChestInventory;
-import noobanidus.mods.lootr.api.blockentity.ILootBlockEntity;
 import dev.franwdev.lootrteams.util.LootrTeamsServerUtil;
+
+import noobanidus.mods.lootr.common.api.data.blockentity.ILootrBlockEntity;
+import noobanidus.mods.lootr.common.data.LootrInventory;
+import noobanidus.mods.lootr.common.data.LootrSavedData;
 
 @GameTestHolder(LootrTeams.MODID)
 @PrefixGameTestTemplate(false)
@@ -41,14 +41,14 @@ public class LootrTeamsGameTests {
         ServerPlayer playerB = TestHelpers.makePlayer(helper, playerBId, "PlayerB");
 
         helper.runAfterDelay(1, () -> {
-            SpecialChestInventory invA = TestHelpers.openChest(helper, playerA);
-            SpecialChestInventory invB = TestHelpers.openChest(helper, playerB);
+            LootrInventory invA = TestHelpers.openChest(helper, playerA);
+            LootrInventory invB = TestHelpers.openChest(helper, playerB);
 
-            helper.assertTrue(invA != null, "PlayerA should get inventory (ChestData not found)");
+            helper.assertTrue(invA != null, "PlayerA should get inventory (LootrSavedData not found)");
             helper.assertTrue(invA == invB, "Both players in same team should share the exact same inventory instance");
 
-            ChestData data = TestHelpers.getChestData(helper);
-            helper.assertTrue(data != null, "ChestData should be accessible via TestHelpers");
+            LootrSavedData data = TestHelpers.getChestData(helper);
+            helper.assertTrue(data != null, "LootrSavedData should be accessible via TestHelpers");
             helper.assertTrue(TestHelpers.getInventoryMap(data).containsKey(teamId),
                     "Inventory map should contain the team UUID");
 
@@ -64,20 +64,19 @@ public class LootrTeamsGameTests {
         UUID playerAId = UUID.randomUUID();
         UUID playerBId = UUID.randomUUID();
 
-
         ServerPlayer playerA = TestHelpers.makePlayer(helper, playerAId, "SoloA");
         ServerPlayer playerB = TestHelpers.makePlayer(helper, playerBId, "SoloB");
 
         helper.runAfterDelay(1, () -> {
-            SpecialChestInventory invA = TestHelpers.openChest(helper, playerA);
-            SpecialChestInventory invB = TestHelpers.openChest(helper, playerB);
+            LootrInventory invA = TestHelpers.openChest(helper, playerA);
+            LootrInventory invB = TestHelpers.openChest(helper, playerB);
 
             helper.assertTrue(invA != null && invB != null,
-                    "Both solo players should get inventories (ChestData not found)");
+                    "Both solo players should get inventories (LootrSavedData not found)");
             helper.assertTrue(invA != invB, "Solo players should have separate inventory instances");
 
-            ChestData data = TestHelpers.getChestData(helper);
-            helper.assertTrue(data != null, "ChestData should be accessible via TestHelpers");
+            LootrSavedData data = TestHelpers.getChestData(helper);
+            helper.assertTrue(data != null, "LootrSavedData should be accessible via TestHelpers");
             var map = TestHelpers.getInventoryMap(data);
             helper.assertTrue(map.containsKey(TeamIdentifier.toGhostTeamId(playerAId)), "Map should contain ghost A");
             helper.assertTrue(map.containsKey(TeamIdentifier.toGhostTeamId(playerBId)), "Map should contain ghost B");
@@ -161,7 +160,7 @@ public class LootrTeamsGameTests {
                 TestHelpers.openChest(helper, playerA);
                 TestHelpers.openChest(helper, playerB);
 
-                var data = TestHelpers.getChestData(helper);
+                LootrSavedData data = TestHelpers.getChestData(helper);
                 if (data == null) {
                     helper.fail("Chest data should exist");
                     return;
@@ -188,7 +187,7 @@ public class LootrTeamsGameTests {
         int playerCount = 6;
 
         var players = new ArrayList<ServerPlayer>();
-        var inventories = new ArrayList<SpecialChestInventory>();
+        var inventories = new ArrayList<LootrInventory>();
 
         for (int i = 0; i < playerCount; i++) {
             UUID playerId = UUID.nameUUIDFromBytes(("concurrent_player_" + i).getBytes());
@@ -203,7 +202,7 @@ public class LootrTeamsGameTests {
         });
 
         helper.runAfterDelay(10, () -> {
-            var data = TestHelpers.getChestData(helper);
+            LootrSavedData data = TestHelpers.getChestData(helper);
             if (data == null) {
                 helper.fail("Chest data should exist");
                 return;
@@ -255,7 +254,7 @@ public class LootrTeamsGameTests {
         UUID playerId = UUID.randomUUID();
         TeamTestStub.setTeam(playerId, teamId);
 
-        final noobanidus.mods.lootr.data.ChestData[] dataRef = new noobanidus.mods.lootr.data.ChestData[1];
+        final LootrSavedData[] dataRef = new LootrSavedData[1];
 
         helper.runAfterDelay(1, () -> {
             ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "PlayerA");
@@ -271,7 +270,7 @@ public class LootrTeamsGameTests {
         });
 
         helper.runAfterDelay(40, () -> {
-            var data = dataRef[0];
+            LootrSavedData data = dataRef[0];
             if (data == null) {
                 helper.fail("Chest data should exist");
                 return;
@@ -294,8 +293,8 @@ public class LootrTeamsGameTests {
         TeamTestStub.setTeam(playerId, teamId);
         ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "PlayerA");
 
-        final ChestData[] dataRef = new ChestData[1];
-        final SpecialChestInventory[] inventoryRef = new SpecialChestInventory[1];
+        final LootrSavedData[] dataRef = new LootrSavedData[1];
+        final LootrInventory[] inventoryRef = new LootrInventory[1];
 
         helper.runAfterDelay(1, () -> {
             inventoryRef[0] = TestHelpers.openChest(helper, player);
@@ -307,7 +306,7 @@ public class LootrTeamsGameTests {
         });
 
         helper.runAfterDelay(20, () -> {
-            var data = dataRef[0];
+            LootrSavedData data = dataRef[0];
             if (data == null) {
                 helper.fail("Chest data should exist");
                 return;
@@ -319,7 +318,7 @@ public class LootrTeamsGameTests {
             // LEAVE TEAM: Map player to their own ghost team (solo)
             TeamTestStub.setTeam(playerId, TeamIdentifier.toGhostTeamId(playerId));
 
-            var ghostInventory = TestHelpers.openChest(helper, player);
+            LootrInventory ghostInventory = TestHelpers.openChest(helper, player);
             UUID ghostId = TeamIdentifier.toGhostTeamId(playerId);
             var updated = TestHelpers.getInventoryMap(data);
 
@@ -346,8 +345,8 @@ public class LootrTeamsGameTests {
         storage.clear();
         helper.assertTrue(storage.getPlayersInTeam(teamId).isEmpty(), "Should be empty after clear");
 
-        final ChestData[] dataRef = new ChestData[1];
-        final SpecialChestInventory[] inventoryRef = new SpecialChestInventory[1];
+        final LootrSavedData[] dataRef = new LootrSavedData[1];
+        final LootrInventory[] inventoryRef = new LootrInventory[1];
 
         helper.runAfterDelay(1, () -> {
             ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "SoloPlayer");
@@ -359,7 +358,7 @@ public class LootrTeamsGameTests {
         });
 
         helper.runAfterDelay(40, () -> {
-            var data = dataRef[0];
+            LootrSavedData data = dataRef[0];
             if (data == null) {
                 helper.fail("Chest data should exist");
                 return;
@@ -372,7 +371,7 @@ public class LootrTeamsGameTests {
             helper.assertTrue(cleared, "Player inventory should be cleared by Lootr");
 
             ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "SoloPlayer");
-            var secondInventory = TestHelpers.openChest(helper, player);
+            LootrInventory secondInventory = TestHelpers.openChest(helper, player);
             helper.assertTrue(secondInventory != inventoryRef[0], "After clear, solo player should get new loot");
             helper.succeed();
         });
@@ -393,7 +392,7 @@ public class LootrTeamsGameTests {
         });
 
         helper.runAfterDelay(40, () -> {
-            ChestData data = TestHelpers.getChestData(helper);
+            LootrSavedData data = TestHelpers.getChestData(helper);
             var map = TestHelpers.getInventoryMap(data);
             helper.assertTrue(map.containsKey(playerId), "Player entry should be synced");
             helper.assertTrue(map.containsKey(ghostId), "Ghost entry should exist");
@@ -402,7 +401,7 @@ public class LootrTeamsGameTests {
             helper.assertFalse(map.containsKey(playerId), "Player entry should be cleared");
             helper.assertFalse(map.containsKey(ghostId), "Ghost entry should also be cleared (synced deletion)");
 
-            var secondInv = TestHelpers.openChest(helper, player);
+            LootrInventory secondInv = TestHelpers.openChest(helper, player);
             helper.assertTrue(secondInv != null, "Should get new inventory after clear");
 
             helper.succeed();
@@ -427,17 +426,17 @@ public class LootrTeamsGameTests {
         helper.runAfterDelay(1, () -> {
             // Player A opens the chest
             TestHelpers.openChest(helper, playerA);
-            
+
             // Simulate the addOpener/sync that happens in real gameplay
-            ILootBlockEntity tile = (ILootBlockEntity) helper.getBlockEntity(TestHelpers.CHEST_POS);
+            ILootrBlockEntity tile = (ILootrBlockEntity) helper.getBlockEntity(TestHelpers.CHEST_POS);
             LootrTeamsServerUtil.refreshOpeners(tile);
-            
+
             java.util.Set<UUID> openers = tile.getOpeners();
-            
+
             helper.assertTrue(openers.contains(playerAId), "PlayerA should be in openers set");
             helper.assertTrue(openers.contains(playerBId), "PlayerB should be in openers set");
             helper.assertTrue(openers.contains(teamId), "TeamId should be in openers set");
-            
+
             helper.succeed();
         });
     }
