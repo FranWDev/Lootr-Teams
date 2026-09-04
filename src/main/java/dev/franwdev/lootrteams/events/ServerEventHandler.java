@@ -4,12 +4,12 @@ import dev.franwdev.lootrteams.LootrTeams;
 import dev.franwdev.lootrteams.config.TeamLootrConfig;
 import dev.franwdev.lootrteams.migration.LegacyMigrator;
 import dev.franwdev.lootrteams.team.TeamLootrManager;
-import net.minecraftforge.event.server.ServerStartedEvent;
-import net.minecraftforge.event.server.ServerStoppingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 
-@Mod.EventBusSubscriber(modid = LootrTeams.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = LootrTeams.MODID, bus = EventBusSubscriber.Bus.GAME)
 public class ServerEventHandler {
 
     @SubscribeEvent
@@ -24,8 +24,6 @@ public class ServerEventHandler {
         }
     }
 
-
-
     @SubscribeEvent
     public static void onServerStopping(ServerStoppingEvent event) {
         if (TeamLootrManager.INSTANCE != null) {
@@ -33,3 +31,4 @@ public class ServerEventHandler {
         }
     }
 }
+

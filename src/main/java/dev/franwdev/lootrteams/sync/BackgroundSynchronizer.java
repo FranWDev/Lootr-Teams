@@ -19,7 +19,7 @@ import dev.franwdev.lootrteams.team.FTBTeamsCompat;
 import dev.franwdev.lootrteams.team.TeamLootrManager;
 import dev.franwdev.lootrteams.team.TeamStorageManager;
 import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.server.ServerLifecycleHooks;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import noobanidus.mods.lootr.data.ChestData;
 import noobanidus.mods.lootr.data.SpecialChestInventory;
 

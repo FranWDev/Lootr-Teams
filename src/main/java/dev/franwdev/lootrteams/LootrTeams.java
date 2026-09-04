@@ -1,10 +1,9 @@
 package dev.franwdev.lootrteams;
 
 import dev.franwdev.lootrteams.config.TeamLootrConfig;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-
+import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,3 +17,4 @@ public class LootrTeams {
         // Other initialization is handled by CommonSetup via the EventBus
     }
 }
+

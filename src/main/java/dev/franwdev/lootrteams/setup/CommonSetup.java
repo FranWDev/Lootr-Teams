@@ -4,11 +4,11 @@ import dev.franwdev.lootrteams.LootrTeams;
 import dev.franwdev.lootrteams.config.TeamLootrConfig;
 import dev.franwdev.lootrteams.team.FTBTeamsCompat;
 import dev.franwdev.lootrteams.team.TeamLootrManager;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 
-@Mod.EventBusSubscriber(modid = LootrTeams.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = LootrTeams.MODID, bus = EventBusSubscriber.Bus.MOD)
 public class CommonSetup {
 
     @SubscribeEvent
@@ -24,3 +24,4 @@ public class CommonSetup {
         });
     }
 }
+
