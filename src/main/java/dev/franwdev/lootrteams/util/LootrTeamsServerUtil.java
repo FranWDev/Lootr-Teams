@@ -8,36 +8,24 @@ import java.util.UUID;
 import dev.franwdev.lootrteams.mixins.AccessorLootrSavedData;
 import dev.franwdev.lootrteams.team.FTBTeamsCompat;
 import dev.franwdev.lootrteams.team.TeamLootrManager;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.entity.Entity;
 import noobanidus.mods.lootr.common.api.IOpeners;
+import noobanidus.mods.lootr.common.api.data.ILootrInfoProvider;
 import noobanidus.mods.lootr.common.api.data.blockentity.ILootrBlockEntity;
+import noobanidus.mods.lootr.common.data.DataStorage;
 import noobanidus.mods.lootr.common.data.LootrInventory;
 import noobanidus.mods.lootr.common.data.LootrSavedData;
 
 public class LootrTeamsServerUtil {
 
     public static void refreshOpeners(IOpeners openable) {
-        Level level = null;
-        BlockPos pos = null;
-        UUID tileId = null;
-
-        if (openable instanceof BlockEntity be) {
-            level = be.getLevel();
-            pos = be.getBlockPos();
-            if (openable instanceof ILootrBlockEntity tile) {
-                tileId = tile.getTileId();
-            }
-        } else if (openable instanceof Entity entity) {
-            level = entity.level();
-            pos = entity.blockPosition();
-            tileId = entity.getUUID();
+        if (!(openable instanceof ILootrInfoProvider provider)) {
+            return;
         }
 
-        if (level == null || level.isClientSide() || tileId == null) {
+        Level level = provider.getInfoLevel();
+        if (level == null || level.isClientSide()) {
             return;
         }
 
@@ -45,14 +33,7 @@ public class LootrTeamsServerUtil {
             return;
         }
 
-        LootrSavedData data = null;
-        ServerLevel serverLevel = (ServerLevel) level;
-        if (openable instanceof Entity) {
-            data = LootrSavedData.getEntityData(serverLevel, pos, tileId);
-        } else {
-            data = LootrSavedData.getContainerData(serverLevel, pos, tileId);
-        }
-
+        LootrSavedData data = DataStorage.getData(provider);
         if (data == null) {
             return;
         }
@@ -84,14 +65,16 @@ public class LootrTeamsServerUtil {
             }
         }
 
-        Set<UUID> currentOpeners = openable.getOpeners();
-        if (!currentOpeners.equals(newOpeners)) {
-            currentOpeners.clear();
-            currentOpeners.addAll(newOpeners);
+        Set<UUID> visualOpeners = data.getVisualOpeners();
+        if (!visualOpeners.equals(newOpeners)) {
+            visualOpeners.clear();
+            visualOpeners.addAll(newOpeners);
+            data.markChanged();
+
             if (openable instanceof BlockEntity be) {
                 be.setChanged();
                 if (openable instanceof ILootrBlockEntity tile) {
-                    tile.updatePacketViaState();
+                    tile.updatePacketViaForce();
                 }
             }
         }

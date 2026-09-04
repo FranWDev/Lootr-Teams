@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import dev.franwdev.lootrteams.util.LootrTeamsServerUtil;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import noobanidus.mods.lootr.common.api.data.blockentity.ILootrBlockEntity;
 import noobanidus.mods.lootr.common.block.entity.LootrChestBlockEntity;
@@ -21,8 +22,8 @@ import noobanidus.mods.lootr.common.block.entity.LootrBarrelBlockEntity;
 }, remap = false)
 public abstract class MixinLootBlockEntity {
 
-    @Inject(method = "getUpdateTag()Lnet/minecraft/nbt/CompoundTag;", at = @At("HEAD"), remap = true, require = 0)
-    private void onGetUpdateTag(CallbackInfoReturnable<CompoundTag> cir) {
+    @Inject(method = "getUpdateTag(Lnet/minecraft/core/HolderLookup$Provider;)Lnet/minecraft/nbt/CompoundTag;", at = @At("HEAD"), remap = false, require = 0)
+    private void onGetUpdateTag(HolderLookup.Provider registries, CallbackInfoReturnable<CompoundTag> cir) {
         LootrTeamsServerUtil.refreshOpeners((ILootrBlockEntity) this);
     }
 }

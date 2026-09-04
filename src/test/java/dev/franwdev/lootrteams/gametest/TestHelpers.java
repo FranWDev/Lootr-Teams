@@ -17,9 +17,10 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.common.util.FakePlayer;
-import net.neoforged.neoforge.registries.NeoForgeRegistries;
-import noobanidus.mods.lootr.common.api.LootFiller;
+import noobanidus.mods.lootr.common.api.data.ILootrInfoProvider;
 import noobanidus.mods.lootr.common.api.data.blockentity.ILootrBlockEntity;
+import noobanidus.mods.lootr.common.api.data.inventory.ILootrInventory;
+import noobanidus.mods.lootr.common.data.DataStorage;
 import noobanidus.mods.lootr.common.data.LootrInventory;
 import noobanidus.mods.lootr.common.data.LootrSavedData;
 
@@ -55,24 +56,19 @@ public class TestHelpers {
 
     /**
      * Gets the Lootr LootrSavedData for the chest at CHEST_POS inside the test structure.
-     * Retrieves from the last opened inventory to avoid timing issues with data persistence.
      */
     public static LootrSavedData getChestData(GameTestHelper helper) {
         ServerLevel level = (ServerLevel) helper.getLevel();
         BlockPos worldPos = helper.absolutePos(CHEST_POS);
         BlockEntity be = level.getBlockEntity(worldPos);
-        if (be instanceof ILootrBlockEntity lootrBE) {
-            UUID chestUUID = lootrBE.getTileId();
-            if (chestUUID != null) {
-                return LootrSavedData.getContainerData(level, worldPos, chestUUID);
-            }
+        if (be instanceof ILootrInfoProvider provider) {
+            return DataStorage.getData(provider);
         }
         return null;
     }
 
     /**
      * Simulates a player opening a chest (triggers LootrSavedData getInventory).
-     * Builds a LootFiller from the block entity's loot table and seed.
      */
     public static LootrInventory openChest(GameTestHelper helper, ServerPlayer player) {
         return openChestAt(helper, player, CHEST_POS);
@@ -97,7 +93,6 @@ public class TestHelpers {
     }
 
     public static LootrInventory openChestAt(GameTestHelper helper, ServerPlayer player, BlockPos pos) {
-        ServerLevel level = (ServerLevel) helper.getLevel();
         BlockPos worldPos = helper.absolutePos(pos);
 
         // Use helper methods which are safer in GameTest context
@@ -112,25 +107,21 @@ public class TestHelpers {
             System.err.println("[LootrTeamsTest] BlockEntity at relative " + pos + " (absolute " + worldPos + ") is NULL! Block is: " + helper.getBlockState(pos));
             return null;
         }
-        if (!(be instanceof ILootrBlockEntity lootrBE)) {
-            System.err.println("[LootrTeamsTest] BlockEntity at relative " + pos + " is not an ILootrBlockEntity! Class: " + be.getClass().getName());
+        if (!(be instanceof ILootrInfoProvider provider)) {
+            System.err.println("[LootrTeamsTest] BlockEntity at relative " + pos + " is not an ILootrInfoProvider! Class: " + be.getClass().getName());
             return null;
         }
 
-        UUID chestUUID = lootrBE.getTileId();
-        // ILootrBlockEntity implements LootFiller directly
-        LootFiller filler = (fillerPlayer, fillerContainer, fillerTable, fillerSeed) ->
-            lootrBE.unpackLootTable(fillerPlayer, fillerContainer, fillerTable, fillerSeed);
-        return LootrSavedData.getInventory(level, chestUUID, worldPos, player, lootrBE, filler);
+        ILootrInventory inv = DataStorage.getInventory(provider, player, provider.getDefaultFiller());
+        return (LootrInventory) inv;
     }
 
     public static LootrInventory getInventoryAt(GameTestHelper helper, BlockPos pos, UUID teamId) {
         ServerLevel level = (ServerLevel) helper.getLevel();
         BlockPos worldPos = helper.absolutePos(pos);
         BlockEntity be = level.getBlockEntity(worldPos);
-        if (be instanceof ILootrBlockEntity lootrBE) {
-            UUID chestUUID = lootrBE.getTileId();
-            LootrSavedData data = LootrSavedData.getContainerData(level, worldPos, chestUUID);
+        if (be instanceof ILootrInfoProvider provider) {
+            LootrSavedData data = DataStorage.getData(provider);
             if (data != null) {
                 return getInventoryMap(data).get(teamId);
             }
@@ -141,7 +132,7 @@ public class TestHelpers {
     public static boolean clearPlayerInventories(GameTestHelper helper, UUID playerId) {
         LootrSavedData data = getChestData(helper);
         if (data != null) {
-            return data.clearInventory(playerId);
+            return data.clearInventories(playerId);
         }
         return false;
     }

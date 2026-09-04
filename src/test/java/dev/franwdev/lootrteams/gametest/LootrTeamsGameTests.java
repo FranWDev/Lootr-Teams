@@ -10,6 +10,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
+import java.util.Set;
+
 import dev.franwdev.lootrteams.LootrTeams;
 import dev.franwdev.lootrteams.config.TeamLootrConfig;
 import dev.franwdev.lootrteams.team.TeamIdentifier;
@@ -17,7 +19,7 @@ import dev.franwdev.lootrteams.team.TeamLootrManager;
 import dev.franwdev.lootrteams.team.TeamStorageManager;
 import dev.franwdev.lootrteams.util.LootrTeamsServerUtil;
 
-import noobanidus.mods.lootr.common.api.data.blockentity.ILootrBlockEntity;
+import noobanidus.mods.lootr.common.api.data.ILootrInfoProvider;
 import noobanidus.mods.lootr.common.data.LootrInventory;
 import noobanidus.mods.lootr.common.data.LootrSavedData;
 
@@ -428,14 +430,16 @@ public class LootrTeamsGameTests {
             TestHelpers.openChest(helper, playerA);
 
             // Simulate the addOpener/sync that happens in real gameplay
-            ILootrBlockEntity tile = (ILootrBlockEntity) helper.getBlockEntity(TestHelpers.CHEST_POS);
+            ILootrInfoProvider tile = (ILootrInfoProvider) helper.getBlockEntity(TestHelpers.CHEST_POS);
             LootrTeamsServerUtil.refreshOpeners(tile);
 
-            java.util.Set<UUID> openers = tile.getOpeners();
+            LootrSavedData data = TestHelpers.getChestData(helper);
+            helper.assertTrue(data != null, "Chest data should exist");
+            Set<UUID> visualOpeners = data.getVisualOpeners();
 
-            helper.assertTrue(openers.contains(playerAId), "PlayerA should be in openers set");
-            helper.assertTrue(openers.contains(playerBId), "PlayerB should be in openers set");
-            helper.assertTrue(openers.contains(teamId), "TeamId should be in openers set");
+            helper.assertTrue(visualOpeners.contains(playerAId), "PlayerA should be in openers set");
+            helper.assertTrue(visualOpeners.contains(playerBId), "PlayerB should be in openers set");
+            helper.assertTrue(visualOpeners.contains(teamId), "TeamId should be in openers set");
 
             helper.succeed();
         });

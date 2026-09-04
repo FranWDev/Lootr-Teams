@@ -34,6 +34,8 @@ neoForge {
             sourceSet sourceSets.main
         }
     }
+
+    addModdingDependenciesTo sourceSets.test
 }
 
 sourceSets {

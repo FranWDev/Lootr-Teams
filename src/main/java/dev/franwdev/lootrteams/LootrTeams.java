@@ -1,7 +1,7 @@
 package dev.franwdev.lootrteams;
 
 import dev.franwdev.lootrteams.config.TeamLootrConfig;
-import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import org.apache.logging.log4j.LogManager;
@@ -12,8 +12,8 @@ public class LootrTeams {
     public static final String MODID = "lootrteams";
     public static final Logger LOG = LogManager.getLogger(MODID);
 
-    public LootrTeams() {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, TeamLootrConfig.SPEC, "lootrteams-common.toml");
+    public LootrTeams(ModContainer modContainer) {
+        modContainer.registerConfig(ModConfig.Type.COMMON, TeamLootrConfig.SPEC, "lootrteams-common.toml");
         // Other initialization is handled by CommonSetup via the EventBus
     }
 }
