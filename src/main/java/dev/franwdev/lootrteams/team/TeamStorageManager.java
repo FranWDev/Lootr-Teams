@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import noobanidus.mods.lootr.data.SpecialChestInventory;
+import noobanidus.mods.lootr.common.data.LootrInventory;
 
 public class TeamStorageManager {
 
@@ -24,9 +24,10 @@ public class TeamStorageManager {
      * Called from the Mixin when a new inventory is created.
      * Registers the relationship between player and team.
      */
-    public void onInventoryCreated(UUID teamId, UUID playerId, SpecialChestInventory inventory) {
+    public void onInventoryCreated(UUID teamId, UUID playerId, LootrInventory inventory) {
         updatePlayerTeam(playerId, teamId);
     }
+
 
     /** Returns all playerUUIDs associated with a team. */
     public Set<UUID> getPlayersInTeam(UUID teamId) {

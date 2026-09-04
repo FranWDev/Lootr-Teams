@@ -16,41 +16,40 @@ import dev.franwdev.lootrteams.config.TeamLootrConfig;
 import dev.franwdev.lootrteams.team.TeamIdentifier;
 import dev.franwdev.lootrteams.team.TeamLootrManager;
 import net.minecraft.server.level.ServerPlayer;
-import noobanidus.mods.lootr.data.ChestData;
-import noobanidus.mods.lootr.data.SpecialChestInventory;
+import noobanidus.mods.lootr.common.data.LootrInventory;
+import noobanidus.mods.lootr.common.data.LootrSavedData;
 
-@Mixin(value = ChestData.class, remap = false)
-public abstract class MixinChestData {
+@Mixin(value = LootrSavedData.class, remap = false)
+public abstract class MixinLootrSavedData {
 
     @Shadow
-    private Map<UUID, SpecialChestInventory> inventories;
+    private Map<UUID, LootrInventory> inventories;
 
     /**
      * Intercepts getInventory to return the team's shared inventory instead of the
      * player's private one.
      */
-    @Inject(method = "getInventory(Lnet/minecraft/server/level/ServerPlayer;)Lnoobanidus/mods/lootr/data/SpecialChestInventory;", at = @At("HEAD"), cancellable = true, remap = false)
-    private void teamGetInventory(ServerPlayer player, CallbackInfoReturnable<SpecialChestInventory> cir) {
+    @Inject(method = "getInventory(Ljava/util/UUID;)Lnoobanidus/mods/lootr/common/data/LootrInventory;", at = @At("HEAD"), cancellable = true, remap = false)
+    private void teamGetInventory(UUID playerId, CallbackInfoReturnable<LootrInventory> cir) {
         if (!TeamLootrConfig.ENABLE_TEAMS || TeamLootrManager.INSTANCE == null) {
             return;
         }
 
-        UUID teamId = TeamLootrManager.INSTANCE.getTeamId(player);
-        SpecialChestInventory teamInv = inventories.get(teamId);
+        UUID teamId = TeamLootrManager.INSTANCE.getTeamId(playerId);
+        LootrInventory teamInv = inventories.get(teamId);
 
         if (teamInv == null) {
-            SpecialChestInventory existingInv = null;
-            UUID ghostId = TeamIdentifier.toGhostTeamId(player.getUUID());
+            LootrInventory existingInv = null;
+            UUID ghostId = TeamIdentifier.toGhostTeamId(playerId);
 
             // Check if the current player's ghost ID has an inventory
             existingInv = inventories.get(ghostId);
 
-            // If it's a real team and the current player didn't have one, check other
-            // members
+            // If it's a real team and the current player didn't have one, check other members
             if (existingInv == null && !teamId.equals(ghostId)) {
                 Set<UUID> members = TeamLootrManager.INSTANCE.getStorageManager().getPlayersInTeam(teamId);
                 for (UUID memberId : members) {
-                    if (memberId.equals(player.getUUID()))
+                    if (memberId.equals(playerId))
                         continue;
                     UUID memberGhostId = TeamIdentifier.toGhostTeamId(memberId);
                     existingInv = inventories.get(memberGhostId);
@@ -66,11 +65,11 @@ public abstract class MixinChestData {
 
             // Fallback for vanilla migration
             if (existingInv == null && teamId.equals(ghostId)) {
-                existingInv = inventories.get(player.getUUID());
+                existingInv = inventories.get(playerId);
                 if (existingInv != null) {
                     if (TeamLootrConfig.DEBUG_MODE) {
                         LootrTeams.LOG.info("[LootrTeams] Player {} inherits loot from playerUUID entry for ghost team",
-                                player.getName().getString());
+                                playerId);
                     }
                 }
             }
@@ -79,10 +78,10 @@ public abstract class MixinChestData {
                 // Promote to the current teamId (works for both ghost promoting to real team,
                 // and playerUUID promoting to ghost)
                 inventories.put(teamId, existingInv);
-                ((ChestData) (Object) this).setDirty();
+                ((LootrSavedData) (Object) this).setDirty();
 
                 // Notify the storage manager for future synchronization
-                TeamLootrManager.INSTANCE.getStorageManager().onInventoryCreated(teamId, player.getUUID(), existingInv);
+                TeamLootrManager.INSTANCE.getStorageManager().onInventoryCreated(teamId, playerId, existingInv);
 
                 cir.setReturnValue(existingInv);
                 return;
@@ -90,10 +89,10 @@ public abstract class MixinChestData {
         }
 
         if (teamInv != null) {
-            TeamLootrManager.INSTANCE.getStorageManager().onInventoryCreated(teamId, player.getUUID(), teamInv);
+            TeamLootrManager.INSTANCE.getStorageManager().onInventoryCreated(teamId, playerId, teamInv);
             if (TeamLootrConfig.DEBUG_MODE) {
                 LootrTeams.LOG.info("[LootrTeams] Player {} is opening chest with teamId {}",
-                        player.getName().getString(), teamId);
+                        playerId, teamId);
             }
         }
 
@@ -101,12 +100,12 @@ public abstract class MixinChestData {
     }
 
     /**
-     * Intercepts clearInventory to also clear the team's shared inventory or the
+     * Intercepts clearInventories to also clear the team's shared inventory or the
      * ghost team inventory.
      * This ensures that /lootr clear <player> works correctly for team-based loot.
      */
-    @Inject(method = "clearInventory(Ljava/util/UUID;)Z", at = @At("HEAD"), remap = false)
-    private void onClearInventory(UUID uuid, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "clearInventories(Ljava/util/UUID;)Z", at = @At("HEAD"), remap = false)
+    private void onClearInventories(UUID uuid, CallbackInfoReturnable<Boolean> cir) {
         if (!TeamLootrConfig.ENABLE_TEAMS || TeamLootrManager.INSTANCE == null) {
             return;
         }
@@ -129,13 +128,12 @@ public abstract class MixinChestData {
      * It redirects the put to use the team UUID instead of the player UUID.
      */
     @Redirect(method = {
-            "createInventory(Lnet/minecraft/server/level/ServerPlayer;Lnoobanidus/mods/lootr/api/LootFiller;Ljava/util/function/IntSupplier;Ljava/util/function/Supplier;Ljava/util/function/Supplier;Ljava/util/function/LongSupplier;)Lnoobanidus/mods/lootr/data/SpecialChestInventory;",
-            "createInventory(Lnet/minecraft/server/level/ServerPlayer;Lnoobanidus/mods/lootr/api/LootFiller;Lnet/minecraft/world/level/block/entity/BaseContainerBlockEntity;Ljava/util/function/Supplier;Ljava/util/function/LongSupplier;)Lnoobanidus/mods/lootr/data/SpecialChestInventory;",
-            "createInventory(Lnet/minecraft/server/level/ServerPlayer;Lnoobanidus/mods/lootr/api/LootFiller;Lnet/minecraft/world/level/block/entity/RandomizableContainerBlockEntity;)Lnoobanidus/mods/lootr/data/SpecialChestInventory;"
+            "createInventory(Lnoobanidus/mods/lootr/common/api/data/ILootrInfoProvider;Lnet/minecraft/server/level/ServerPlayer;Lnoobanidus/mods/lootr/common/api/data/LootFiller;)Lnoobanidus/mods/lootr/common/data/LootrInventory;",
+            "createInventory(Lnoobanidus/mods/lootr/common/api/data/ILootrInfoProvider;Ljava/util/UUID;Lnoobanidus/mods/lootr/common/api/data/LootFiller;)Lnoobanidus/mods/lootr/common/data/LootrInventory;"
     }, at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"), remap = false)
-    private Object teamPutInventory(Map<UUID, SpecialChestInventory> map, Object keyPlayerUUID, Object value) {
+    private Object teamPutInventory(Map<UUID, LootrInventory> map, Object keyPlayerUUID, Object value) {
         if (!TeamLootrConfig.ENABLE_TEAMS || TeamLootrManager.INSTANCE == null) {
-            return map.put((UUID) keyPlayerUUID, (SpecialChestInventory) value);
+            return map.put((UUID) keyPlayerUUID, (LootrInventory) value);
         }
 
         UUID playerId = (UUID) keyPlayerUUID;
@@ -148,18 +146,18 @@ public abstract class MixinChestData {
 
         // Notify the storage manager for future synchronization
         TeamLootrManager.INSTANCE.getStorageManager()
-                .onInventoryCreated(teamId, playerId, (SpecialChestInventory) value);
+                .onInventoryCreated(teamId, playerId, (LootrInventory) value);
 
-        Object result = map.put(teamId, (SpecialChestInventory) value);
+        Object result = map.put(teamId, (LootrInventory) value);
 
         if ("true".equals(System.getProperty("lootrteams.testMode"))) {
-            TeamLootrManager.INSTANCE.synchronizer.processTaskImmediate((ChestData) (Object) this, teamId);
+            TeamLootrManager.INSTANCE.synchronizer.processTaskImmediate((LootrSavedData) (Object) this, teamId);
         } else {
             TeamLootrManager.INSTANCE.synchronizer
-                    .scheduleSyncToPlayers((ChestData) (Object) this, teamId);
+                    .scheduleSyncToPlayers((LootrSavedData) (Object) this, teamId);
         }
 
         return result;
     }
-
 }
+
