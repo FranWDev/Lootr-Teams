@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[47,)"
+loaderVersion="[2,)"
 license="MIT"
 
 [[mods]]
@@ -9,22 +9,23 @@ displayName="Lootr Teams Addon"
 description="Team-based shared loot for Lootr."
 
 [[dependencies.lootrteams]]
-    modId="forge"
-    mandatory=true
-    versionRange="[47,)"
+    modId="neoforge"
+    type="required"
+    versionRange="[21.1,)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.lootrteams]]
     modId="lootr"
-    mandatory=true
-    versionRange="[0.7,)"
+    type="required"
+    versionRange="[1.21,)"
     ordering="BEFORE"
     side="BOTH"
 
 [[dependencies.lootrteams]]
     modId="ftbteams"
-    mandatory=false
-    versionRange="[2001,)"
+    type="optional"
+    versionRange="[2101,)"
     ordering="BEFORE"
     side="BOTH"
+
