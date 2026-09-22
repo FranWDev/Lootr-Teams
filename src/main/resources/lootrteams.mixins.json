@@ -1,14 +1,12 @@
 {
   "required": true,
   "package": "dev.franwdev.lootrteams.mixins",
-  "compatibilityLevel": "JAVA_17",
+  "compatibilityLevel": "JAVA_21",
   "refmap": "lootrteams.refmap.json",
   "mixins": [
-    "MixinChestData",
-    "AccessorChestData",
-    "AccessorSpecialChestInventory",
-    "MixinLootBlockEntity",
-    "MixinChestUtil"
+    "MixinLootrSavedData",
+    "AccessorLootrSavedData",
+    "MixinLootBlockEntity"
   ],
   "client": [],
   "injectors": {
